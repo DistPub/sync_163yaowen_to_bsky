@@ -40,6 +40,9 @@ def fetch_img(url):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.164 Safari/537.36"
     })
     response.raise_for_status()
+    print(f'fetch img {url}')
+    print(f'response header content length: {response.headers["content-length"]}')
+    print(f'response content length: {len(response.content)}')
     return response.content
 
 
