@@ -41,8 +41,10 @@ def fetch_img(url):
     })
     response.raise_for_status()
     print(f'fetch img {url}')
-    print(f'response header content length: {response.headers["content-length"]}')
+    print(f'response headers: {response.headers}')
     print(f'response content length: {len(response.content)}')
+    if len(response.content) == 194:
+        print(f'data: {response.content}')
     return response.content
 
 
