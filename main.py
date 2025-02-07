@@ -90,6 +90,7 @@ def main(service, username, password):
         if post['imgurl'] != '':
             thumb = client.upload_blob(post['img'])
             print(thumb.blob)
+            assert thumb.blob.mime_type.startswith('image/'), post['imgurl']
         embed = models.AppBskyEmbedExternal.Main(
             external=models.AppBskyEmbedExternal.External(
                 title=post['title'],
