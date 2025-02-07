@@ -85,6 +85,7 @@ def main(service, username, password):
         thumb = None
         if post['imgurl'] != '':
             thumb = client.upload_blob(post['img'])
+            print(thumb.blob)
         embed = models.AppBskyEmbedExternal.Main(
             external=models.AppBskyEmbedExternal.External(
                 title=post['title'],
