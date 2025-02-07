@@ -8,6 +8,7 @@ import requests
 
 def fetch_news():
     response = requests.get('https://news.163.com/special/cm_yaowen20200213/')
+    response.raise_for_status()
     json_text = response.text[len('data_callback('):-1]
     news_data = json.loads(json_text)
     news_box = []
@@ -36,6 +37,7 @@ def is_later_news(news_time, pre_news_time):
 
 def fetch_img(url):
     response = requests.get(url)
+    response.raise_for_status()
     return response.content
 
 
