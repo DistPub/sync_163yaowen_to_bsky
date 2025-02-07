@@ -10,6 +10,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GH_PAT || github.token }}
+      - run: pip install -r requirements.txt
       - shell: bash
         env:
           testfirst_password: ${{ secrets.testfirst_password }}
