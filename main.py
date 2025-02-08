@@ -139,11 +139,14 @@ def check_proxy():
         if proxy_data['protocol'] != 'http':
             continue
 
+        proxy = proxy_data['proxy']
         try:
-            response = raw_fetch_img('http://cms-bucket.ws.126.net/2025/0207/8a0b2e2ep00srbeyv004bc0009c0070c.png', proxy_data['proxy'])
+            response = raw_fetch_img('http://cms-bucket.ws.126.net/2025/0207/8a0b2e2ep00srbeyv004bc0009c0070c.png', proxy)
             filter_proxy_pool.append(proxy_data)
+            print(f'proxy: {proxy} good')
         except:
-            continue
+            print(f'proxy: {proxy} bad')
+            
     proxy_pool = filter_proxy_pool
     assert len(proxy_pool) > 0
     
