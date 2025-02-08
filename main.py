@@ -98,7 +98,7 @@ def main(service, username, password, dev):
         return
         
     post_box = post_box[:1]
-    client = Client(base_url=service)
+    client = Client(base_url=service if service != 'default' else None)
     client.login(username, password)
 
     for post in post_box:
