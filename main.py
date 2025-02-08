@@ -54,7 +54,7 @@ def fetch_img(url):
         print(f'fetch img: {url} error:{error}')
         proxy_data = random.choice(proxy_pool)
         try:
-            response = raw_fetch_img(url, f'http://{proxy_data["IP"]}:{proxy_data["PORT"]}')
+            response = raw_fetch_img(url, proxy_data['proxy'])
         except:
             return
 
