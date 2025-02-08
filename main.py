@@ -113,7 +113,7 @@ def main(service, username, password, dev):
                 thumb=thumb.blob if thumb else None,
             )
         )
-        client.send_post(post['post'], embed=embed)
+        client.send_post(post['post'], embed=embed, langs=['zh'])
         
     latest_news_time = post_box[0]['time']
     with open('pre_news_time', 'w') as f:
