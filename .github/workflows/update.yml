@@ -15,4 +15,4 @@ jobs:
         env:
           testfirst_password: ${{ secrets.TESTFIRST_PASSWORD }}
         run: |
-          python main.py --service https://network.hukoubook.com --username testfirst.hukoubook.com --password "$testfirst_password"
+          python main.py --service https://network.hukoubook.com --username testfirst.hukoubook.com --password "$testfirst_password" --check-proxy --dev

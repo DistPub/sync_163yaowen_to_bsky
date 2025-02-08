@@ -40,15 +40,24 @@ def is_later_news(news_time, pre_news_time):
     return news_time > pre_news_time
 
 
-def fetch_img(url):
-    response = requests.get(url, allow_redirects=False)
-    if response.status_code != 200:
-        proxy_data = random.choice(proxy_pool)
-        proxy = f'http://{proxy_data["IP"]}:{proxy_data["PORT"]}'
-        response = requests.get(url, allow_redirects=False, proxies={'http': proxy, 'https': proxy})
+def raw_fetch_img(url, proxy=None):
+    response = requests.get(url, allow_redirects=False, timeout=60, proxies={'http': proxy, 'https': proxy} if proxy else None)
+    assert response.status_code == 200
+    assert response.headers['Content-Type'].startswith('image/')
+    return respose
 
-    if response.status_code != 200:
-        return
+
+def fetch_img(url):
+    try:
+        response = raw_fetch_img(url)
+    except Exception as error:
+        print(f'fetch img: {url} error:{error}')
+        proxy_data = random.choice(proxy_pool)
+        try:
+            response = raw_fetch_img(url, f'http://{proxy_data["IP"]}:{proxy_data["PORT"]}')
+        except:
+            return
+
     print(f'fetch img {url}')
     print(f'response headers: {response.headers}')
     print(f'response content length: {len(response.content)}')
@@ -68,7 +77,7 @@ def git_push():
     os.system('git push')
 
 
-def main(service, username, password):
+def main(service, username, password, dev):
     news_box = fetch_news()
     print(f'fetch news: {len(news_box)}')
     with open('pre_news_time') as f:
@@ -116,14 +125,34 @@ def main(service, username, password):
     latest_news_time = post_box[0]['time']
     with open('pre_news_time', 'w') as f:
         f.write(latest_news_time)
-    git_commit()
-    git_push()
 
+    if not dev:
+        git_commit()
+        git_push()
+
+
+def check_proxy():
+    global proxy_pool
+
+    filter_proxy_pool = []
+    for proxy_data in proxy_pool:
+        try:
+            response = raw_fetch_img('http://cms-bucket.ws.126.net/2025/0207/8a0b2e2ep00srbeyv004bc0009c0070c.png', f'http://{proxy_data["IP"]}:{proxy_data["PORT"]}')
+            filter_proxy_pool.append(proxy_data)
+        except:
+            continue
+    proxy_pool = filter_proxy_pool
+    assert len(proxy_pool) > 0
+    
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--service", help="PDS endpoint")
     parser.add_argument("--username", help="account username")
     parser.add_argument("--password", help="account password")
+    parser.add_argument("--dev", action="store_true")
+    parser.add_argument("--check-proxy", action="store_true")
     args = parser.parse_args()
-    main(args.service, args.username, args.password)
+    if args.check_proxy:
+        check_proxy()
+    main(args.service, args.username, args.password, args.dev)
