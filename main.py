@@ -136,8 +136,11 @@ def check_proxy():
 
     filter_proxy_pool = []
     for proxy_data in proxy_pool:
+        if proxy_data['protocol'] != 'http':
+            continue
+
         try:
-            response = raw_fetch_img('http://cms-bucket.ws.126.net/2025/0207/8a0b2e2ep00srbeyv004bc0009c0070c.png', f'http://{proxy_data["IP"]}:{proxy_data["PORT"]}')
+            response = raw_fetch_img('http://cms-bucket.ws.126.net/2025/0207/8a0b2e2ep00srbeyv004bc0009c0070c.png', proxy_data['proxy'])
             filter_proxy_pool.append(proxy_data)
         except:
             continue
