@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from datetime import datetime
 import json
 import random
+import os
 
 from atproto import Client, client_utils, models
 import requests
@@ -41,10 +42,10 @@ def is_later_news(news_time, pre_news_time):
 
 
 def raw_fetch_img(url, proxy=None):
-    response = requests.get(url, allow_redirects=False, timeout=60, proxies={'http': proxy, 'https': proxy} if proxy else None)
-    assert response.status_code == 200
-    assert response.headers['Content-Type'].startswith('image/')
-    return respose
+    response = requests.get(url, allow_redirects=False, proxies={'http': proxy, 'https': proxy} if proxy else None)
+    assert response.status_code == 200, f'status code: {response.status_code}'
+    assert response.headers['Content-Type'].startswith('image/'), f'content type is not image'
+    return response
 
 
 def fetch_img(url):
@@ -57,15 +58,10 @@ def fetch_img(url):
             response = raw_fetch_img(url, proxy_data['proxy'])
         except:
             return
-
-    print(f'fetch img {url}')
-    print(f'response headers: {response.headers}')
-    print(f'response content length: {len(response.content)}')
     return response.content
 
 
 def git_commit():
-    import os
     os.system('git config --global user.email "xiaopengyou@live.com"')
     os.system('git config --global user.name "robot auto"')
     os.system('git add .')
@@ -73,7 +69,6 @@ def git_commit():
 
 
 def git_push():
-    import os
     os.system('git push')
 
 
@@ -110,8 +105,6 @@ def main(service, username, password, dev):
         thumb = None
         if post['imgurl'] != '' and post['img'] is not None:
             thumb = client.upload_blob(post['img'])
-            print(thumb.blob)
-            assert thumb.blob.mime_type.startswith('image/'), post['imgurl']
         embed = models.AppBskyEmbedExternal.Main(
             external=models.AppBskyEmbedExternal.External(
                 title=post['title'],
@@ -131,21 +124,20 @@ def main(service, username, password, dev):
         git_push()
 
 
-def check_proxy():
+def check_proxy(auth_username, auth_password):
     global proxy_pool
 
     filter_proxy_pool = []
     for proxy_data in proxy_pool:
-        if proxy_data['protocol'] != 'http':
-            continue
-
-        proxy = proxy_data['proxy']
+        protocol = f'http'
+        proxy = f'{protocol}://{auth_username}:{auth_password}@{proxy_data["ip"]}:{proxy_data["port"]}'
+        proxy_data['proxy'] = proxy
         try:
             response = raw_fetch_img('http://cms-bucket.ws.126.net/2025/0207/8a0b2e2ep00srbeyv004bc0009c0070c.png', proxy)
             filter_proxy_pool.append(proxy_data)
-            print(f'proxy: {proxy} good')
-        except:
-            print(f'proxy: {proxy} bad')
+            print(f'proxy: {proxy_data["ip"]}:{proxy_data["port"]} good')
+        except Exception as error:
+            print(f'proxy: {proxy_data["ip"]}:{proxy_data["port"]} bad error: {error}')
             
     proxy_pool = filter_proxy_pool
     assert len(proxy_pool) > 0
@@ -156,9 +148,11 @@ if __name__ == '__main__':
     parser.add_argument("--service", help="PDS endpoint")
     parser.add_argument("--username", help="account username")
     parser.add_argument("--password", help="account password")
+    parser.add_argument("--webshare-username", help="webshare username")
+    parser.add_argument("--webshare-password", help="webshare password")
     parser.add_argument("--dev", action="store_true")
     parser.add_argument("--check-proxy", action="store_true")
     args = parser.parse_args()
     if args.check_proxy:
-        check_proxy()
+        check_proxy(args.webshare_username, args.webshare_password)
     main(args.service, args.username, args.password, args.dev)

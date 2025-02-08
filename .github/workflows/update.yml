@@ -13,6 +13,11 @@ jobs:
       - run: pip install -r requirements.txt
       - shell: bash
         env:
-          testfirst_password: ${{ secrets.TESTFIRST_PASSWORD }}
+          atproto_username: ${{secrets.ATPROTO_USERNAME}}
+          atproto_password: ${{secrets.ATPROTO_PASSWORD}}
+          webshare_username: ${{secrets.WEBSHARE_USERNAME}}
+          webshare_password: ${{secrets.WEBSHARE_PASSWORD}}
         run: |
-          python main.py --service https://network.hukoubook.com --username testfirst.hukoubook.com --password "$testfirst_password" --check-proxy --dev
+          python main.py --service https://network.hukoubook.com --username "$atproto_username" --password "$atproto_password" |
+          --webshare-username "$webshare_username" --webshare-password "$webshare_password" |
+          --check-proxy --dev
