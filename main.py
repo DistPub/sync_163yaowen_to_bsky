@@ -6,9 +6,13 @@ from atproto import Client, client_utils, models
 import requests
 
 
+with open('proxy.json') as f:
+    proxy_pool = json.loads(f.read())
+
+
 def fetch_news():
-    response = requests.get('https://news.163.com/special/cm_yaowen20200213/')
-    response.raise_for_status()
+    response = requests.get('https://news.163.com/special/cm_yaowen20200213/', allow_redirects=False)
+    assert response.status_code == 200, response.status_code
     json_text = response.text[len('data_callback('):-1]
     news_data = json.loads(json_text)
     news_box = []
@@ -36,17 +40,17 @@ def is_later_news(news_time, pre_news_time):
 
 
 def fetch_img(url):
-    import os
-    os.system(f'curl -v {url}')
-    response = requests.get(url, headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.164 Safari/537.36"
-    })
-    response.raise_for_status()
+    response = requests.get(url, allow_redirects=False)
+    if response.status_code != 200:
+        proxy_data = random.choice(proxy_pool)
+        proxy = f'http://{proxy_data["IP"]}:{proxy_data["PORT"]}'
+        response = requests.get(url, allow_redirects=False, proxies={'http': proxy, 'https': proxy})
+
+    if response.status_code != 200:
+        return
     print(f'fetch img {url}')
     print(f'response headers: {response.headers}')
     print(f'response content length: {len(response.content)}')
-    if len(response.content) == 194:
-        print(f'data: {response.content}')
     return response.content
 
 
@@ -94,7 +98,7 @@ def main(service, username, password):
 
     for post in post_box:
         thumb = None
-        if post['imgurl'] != '':
+        if post['imgurl'] != '' and post['img'] is not None:
             thumb = client.upload_blob(post['img'])
             print(thumb.blob)
             assert thumb.blob.mime_type.startswith('image/'), post['imgurl']
