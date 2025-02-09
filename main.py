@@ -99,8 +99,11 @@ def main(service, username, password, dev):
         
     client = Client(base_url=service if service != 'default' else None)
     client.login(username, password)
-
+    latest_news_time = post_box[0]['time']
+    
     for post in post_box:
+        if is_later_news(post['time'], latest_news_time):
+            latest_news_time = post['time']
         thumb = None
         if post['imgurl'] != '' and post['img'] is not None:
             thumb = client.upload_blob(post['img'])
@@ -114,7 +117,6 @@ def main(service, username, password, dev):
         )
         client.send_post(post['post'], embed=embed, langs=['zh'])
         
-    latest_news_time = post_box[0]['time']
     with open('pre_news_time', 'w') as f:
         f.write(latest_news_time)
 
