@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import random
 import os
@@ -10,6 +10,16 @@ import requests
 
 with open('proxy.json') as f:
     proxy_pool = json.loads(f.read())
+
+
+with open('12h_news.json') as f:
+    latest_12h_news = []
+    latest_12h_news_url = []
+    before_12h = datetime.now() - timedelta(hours=12)
+    for item in json.loads(f.read()):
+        if datetime.strptime(item['send_time'], "%m/%d/%Y %H:%M:%S") > before_12h:
+            latest_12h_news.append(item)
+            latest_12h_news_url.append(item['url'])
 
 
 def fetch_news():
@@ -83,6 +93,9 @@ def main(service, username, password, dev):
         if not is_later_news(news['time'], pre_news_time):
             continue
 
+        if news['url'] in latest_12h_news_url:
+            continue
+
         if news['imgurl'] != '':
             news['img'] = fetch_img(news['imgurl'])
 
@@ -104,9 +117,11 @@ def main(service, username, password, dev):
     for post in post_box:
         if is_later_news(post['time'], latest_news_time):
             latest_news_time = post['time']
+
         thumb = None
         if post['imgurl'] != '' and post['img'] is not None:
             thumb = client.upload_blob(post['img'])
+
         embed = models.AppBskyEmbedExternal.Main(
             external=models.AppBskyEmbedExternal.External(
                 title=post['title'],
@@ -116,9 +131,16 @@ def main(service, username, password, dev):
             )
         )
         client.send_post(post['post'], embed=embed, langs=['zh'])
+        latest_12h_news.append({
+            'url': post['url'],
+            'send_time': datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+        })
         
     with open('pre_news_time', 'w') as f:
         f.write(latest_news_time)
+
+    with open('12h_news.json', 'w') as f:
+        f.write(json.dumps(latest_12h_news))
 
     if not dev:
         git_commit()
