@@ -85,7 +85,7 @@ def git_push():
 
 def send_post(client, post, embed, langs):
     try:
-        client.send_post(post, embed, langs)
+        client.send_post(post, embed=embed, langs=langs)
     except BadRequestError as error:
         if 'BlobTooLarge' in str(error) and embed.external.thumb is not None:
             embed.external.thumb = None
