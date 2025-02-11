@@ -5,6 +5,7 @@ import random
 import os
 
 from atproto import Client, client_utils, models
+from atproto.exceptions import BadRequestError
 import requests
 
 
@@ -82,6 +83,17 @@ def git_push():
     os.system('git push')
 
 
+def send_post(client, post, embed, langs):
+    try:
+        client.send_post(post, embed, langs)
+    except BadRequestError as error:
+        if 'BlobTooLarge' in str(error) and embed.external.thumb is not None:
+            embed.external.thumb = None
+            send_post(client, post, embed, langs)
+        else:
+            raise error
+
+
 def main(service, username, password, dev):
     news_box = fetch_news()
     print(f'fetch news: {len(news_box)}')
@@ -113,11 +125,9 @@ def main(service, username, password, dev):
     client = Client(base_url=service if service != 'default' else None)
     client.login(username, password)
     latest_news_time = post_box[0]['time']
+    post_status_error = False
     
     for post in post_box:
-        if is_later_news(post['time'], latest_news_time):
-            latest_news_time = post['time']
-
         thumb = None
         if post['imgurl'] != '' and post['img'] is not None:
             thumb = client.upload_blob(post['img'])
@@ -130,11 +140,19 @@ def main(service, username, password, dev):
                 thumb=thumb.blob if thumb else None,
             )
         )
-        client.send_post(post['post'], embed=embed, langs=['zh'])
-        latest_12h_news.append({
-            'url': post['url'],
-            'send_time': datetime.now().strftime('%m/%d/%Y %H:%M:%S')
-        })
+        try:
+            send_post(client, post['post'], embed=embed, langs=['zh'])
+
+            if is_later_news(post['time'], latest_news_time):
+                latest_news_time = post['time']
+
+            latest_12h_news.append({
+                'url': post['url'],
+                'send_time': datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+            })
+        except Exception as error:
+            post_status_error = True
+            print(f'error: {error} when handle post: {post["title"]} {post["url"]} {post["imgurl"]}')
         
     with open('pre_news_time', 'w') as f:
         f.write(latest_news_time)
@@ -145,6 +163,8 @@ def main(service, username, password, dev):
     if not dev:
         git_commit()
         git_push()
+
+    assert post_status_error is False
 
 
 def check_proxy(auth_username, auth_password):
