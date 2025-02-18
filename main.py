@@ -7,6 +7,8 @@ import os
 from atproto import Client, client_utils, models
 from atproto.exceptions import BadRequestError
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 
 with open('proxy.json') as f:
@@ -24,7 +26,15 @@ with open('12h_news.json') as f:
 
 
 def fetch_news():
-    response = requests.get('https://news.163.com/special/cm_yaowen20200213/', allow_redirects=False)
+    s = requests.Session()
+    retries = Retry(
+        total=3,  # 总重试次数
+        backoff_factor=1,  # 间隔时间因子，用于计算重试间隔时间
+        status_forcelist=[104],  # 遇到这些状态码时会触发重试
+        allowed_methods=["GET"]  # 允许重试的方法
+    )
+    s.mount('https://', HTTPAdapter(max_retries=retries))
+    response = s.get('https://news.163.com/special/cm_yaowen20200213/', allow_redirects=False)
     assert response.status_code == 200, response.status_code
     json_text = response.text[len('data_callback('):-1]
     news_data = json.loads(json_text)
