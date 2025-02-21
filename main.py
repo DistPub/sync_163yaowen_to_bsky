@@ -78,7 +78,11 @@ def fetch_img(url):
             proxy_data = random.choice(proxy_pool)
             response = raw_fetch_img(url, proxy_data['proxy'])
         except:
-            return
+            try:
+                url = url.replace('://', '://go.smitechow.com/')
+                response = raw_fetch_img(url)
+            except:
+                return
     return response.content
 
 
