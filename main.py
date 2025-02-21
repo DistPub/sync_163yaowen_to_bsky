@@ -74,8 +74,8 @@ def fetch_img(url):
         response = raw_fetch_img(url)
     except Exception as error:
         print(f'fetch img: {url} error:{error}')
-        proxy_data = random.choice(proxy_pool)
         try:
+            proxy_data = random.choice(proxy_pool)
             response = raw_fetch_img(url, proxy_data['proxy'])
         except:
             return
@@ -193,7 +193,7 @@ def check_proxy(auth_username, auth_password):
             print(f'proxy: {proxy_data["ip"]}:{proxy_data["port"]} bad error: {error}')
             
     proxy_pool = filter_proxy_pool
-    assert len(proxy_pool) > 0
+    # assert len(proxy_pool) > 0
     
 
 if __name__ == '__main__':
