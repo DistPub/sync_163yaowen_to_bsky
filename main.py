@@ -56,6 +56,8 @@ def fetch_news():
 
 
 def is_later_news(news_time, pre_news_time):
+    if pre_news_time is None:
+        return True
     time_format = "%m/%d/%Y %H:%M:%S"
     news_time = datetime.strptime(news_time, time_format)
     pre_news_time = datetime.strptime(pre_news_time, time_format)
@@ -78,11 +80,7 @@ def fetch_img(url):
             proxy_data = random.choice(proxy_pool)
             response = raw_fetch_img(url, proxy_data['proxy'])
         except:
-            try:
-                url = url.replace('://', '://go.smitechow.com/')
-                response = raw_fetch_img(url)
-            except:
-                return
+            return
     return response.content
 
 
@@ -138,7 +136,7 @@ def main(service, username, password, dev):
         
     client = Client(base_url=service if service != 'default' else None)
     client.login(username, password)
-    latest_news_time = post_box[0]['time']
+    latest_news_time = None
     post_status_error = False
     
     for post in post_box:
@@ -167,16 +165,17 @@ def main(service, username, password, dev):
         except Exception as error:
             post_status_error = True
             print(f'error: {error} when handle post: {post["title"]} {post["url"]} {post["imgurl"]}')
-        
-    with open('pre_news_time', 'w') as f:
-        f.write(latest_news_time)
 
-    with open('12h_news.json', 'w') as f:
-        f.write(json.dumps(latest_12h_news))
+    if latest_news_time is not None:
+        with open('pre_news_time', 'w') as f:
+            f.write(latest_news_time)
+    
+        with open('12h_news.json', 'w') as f:
+            f.write(json.dumps(latest_12h_news))
 
-    if not dev:
-        git_commit()
-        git_push()
+        if not dev:
+            git_commit()
+            git_push()
 
     assert post_status_error is False
 
