@@ -44,6 +44,9 @@ def fetch_news():
         if news['point'] == '80':
             continue
 
+        if not news["time"]:
+            continue
+
         news_box.append({
             'title': news["title"],
             'source': news['source'],
