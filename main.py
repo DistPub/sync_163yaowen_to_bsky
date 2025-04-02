@@ -206,7 +206,7 @@ def check_proxy(auth_username, auth_password):
 
 
 def need_appeal():
-    response = requests.get('https://public.api.bsky.app/xrpc/com.atproto.label.queryLabels?uriPatterns=did:plc:mmbknffnysobiitlszjovm3w&sources=did:plc:dya73iwnrfdedgadx3hrulzl')
+    response = requests.get('https://public.api.bsky.app/xrpc/com.atproto.label.queryLabels?uriPatterns=did:plc:mmbknffnysobiitlszjovm3w&sources=did:web:cgv.hukoubook.com')
     return 'nsfw' in [x['val'] for x in response.json()['labels']]
 
 
