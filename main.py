@@ -114,7 +114,10 @@ def main(service, username, password, dev):
     client.login(username, password)
 
     if need_appeal():
-        appeal_nsfw_label(client)
+        try:
+            appeal_nsfw_label(client)
+        except:
+            pass
 
     news_box = fetch_news()
     print(f'fetch news: {len(news_box)}')
