@@ -18,6 +18,6 @@ jobs:
           webshare_username: ${{secrets.WEBSHARE_USERNAME}}
           webshare_password: ${{secrets.WEBSHARE_PASSWORD}}
         run: >
-          python main.py --service default --username "$atproto_username" --password "$atproto_password"
+          python main.py --service "https://network.hukoubook.com" --username "$atproto_username" --password "$atproto_password"
           --webshare-username "$webshare_username" --webshare-password "$webshare_password"
           --check-proxy
