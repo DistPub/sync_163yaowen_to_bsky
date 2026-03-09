@@ -111,13 +111,11 @@ def send_post(client, post, embed, langs):
 
 def main(service, username, password, dev):
     client = Client(base_url=service if service != 'default' else None)
-    client.login(username, password)
-
-    try:
-        if need_appeal():
-            appeal_nsfw_label(client)
-    except:
-        pass
+    session = client._get_and_set_session(username, password)
+    client.me = client.app.bsky.actor.get_profile(models.AppBskyActorGetProfile.Params(actor=session.handle), headers={'atproto-proxy': 'did:web:fatesky.hukoubook.com#fatesky_appview'})
+    
+    if need_appeal():
+        raise Exception('need action')
 
     news_box = fetch_news()
     print(f'fetch news: {len(news_box)}')
@@ -211,22 +209,6 @@ def check_proxy(auth_username, auth_password):
 def need_appeal():
     response = requests.get('https://public.api.bsky.app/xrpc/com.atproto.label.queryLabels?uriPatterns=did:plc:mmbknffnysobiitlszjovm3w&sources=did:web:cgv.hukoubook.com')
     return 'nsfw' in [x['val'] for x in response.json()['labels']]
-
-
-def appeal_nsfw_label(client):
-    dm_client = client.with_bsky_chat_proxy()
-    dm = dm_client.chat.bsky.convo
-    convo = dm.get_convo_for_members(
-        models.ChatBskyConvoGetConvoForMembers.Params(members=['did:web:smite.hukoubook.com']),
-    ).convo
-    dm.send_message(
-        models.ChatBskyConvoSendMessage.Data(
-            convo_id=convo.id,
-            message=models.ChatBskyConvoDefs.MessageInput(
-                text=f"I'm labeled as NSFW, need action.",
-            ),
-        )
-    )
 
 
 if __name__ == '__main__':
